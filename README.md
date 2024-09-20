@@ -7,7 +7,7 @@ FTL Translator is a tool for translating Fluent files (.ftl) to other languages 
 Install the package using pip:
 
 ```bash
-pip install ftl-translator
+poetry add git+https://github.com/taimast/ftl-translator.git
 ```
 
 ## Usage
