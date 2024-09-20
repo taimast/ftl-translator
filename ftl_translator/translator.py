@@ -74,9 +74,9 @@ class GoogleTranslator:
 
         params = self.params.copy()
         if source:
-            params["source"] = source
+            params["sl"] = source
         if target:
-            params["target"] = target
+            params["tl"] = target
         params["q"] = text.strip()
 
         if not self.session:
@@ -119,7 +119,10 @@ class GoogleTranslator:
 
             translated_text = "".join([item[0] for item in result[0] if item[0]])
 
-            logger.debug(f"Translated {len(text)} chars to {target}")
+            logger.debug(
+                f"[{params["sl"]} -> {params["tl"]}] Translated: {text} -> {translated_text}"
+            )
+
             return translated_text
 
     async def translate_file(self, path: str) -> str:
@@ -149,7 +152,7 @@ class GoogleTranslator:
         @return: list of translations
         """
         return await asyncio.gather(
-            *(self.translate(text, source, target) for text in batch),
+            *(self.translate(text, source=source, target=target) for text in batch)
         )
 
     def _is_input_valid(self, text: str, max_chars: int = 5000) -> bool:

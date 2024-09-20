@@ -118,6 +118,7 @@ async def translate(opts: TranslateOpts):
                 if not opts.is_applicable(file):
                     continue
                 target_file = opts.create_target_file(file, target_locale)
+                logger.debug(f"Translating {file.name}")
 
                 file_text = file.read_text(encoding="utf-8")
                 resource = parse(file_text)
