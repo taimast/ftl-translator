@@ -180,3 +180,4 @@ async def translate(opts: TranslateOpts):
                 logger.info(
                     f"[{opts.origin_locale} -> {target_locale}] Translated {file.name}"
                 )
+    logger.info("Translation completed")
