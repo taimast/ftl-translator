@@ -45,8 +45,10 @@ class TranslateOpts:
     include_variables: list[str] = field(default_factory=list)
     exclude_variables: list[str] = field(default_factory=list)
 
-    batch_size: int = 5
-    limit_translate: int = 4
+    translate_batch_size: int = 5
+    translate_limit: int = 4
+    translate_retry_wait_time: int = 5
+    translate_retry_count: int = 3
 
     origin_locale_dir: Path = field(init=False)
 
@@ -139,7 +141,9 @@ async def translate(opts: TranslateOpts):
 
     async with GoogleTranslator(
         source=opts.origin_locale,
-        limit=opts.limit_translate,
+        retry_wait_time=opts.translate_retry_wait_time,
+        retry_count=opts.translate_retry_count,
+        limit=opts.translate_limit,
     ) as g_translator:
         for target_locale in opts.target_locales:
             logger.info(f"[{opts.origin_locale} -> {target_locale}] Translating...")
