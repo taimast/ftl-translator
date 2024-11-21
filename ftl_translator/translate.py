@@ -125,9 +125,12 @@ async def translate_concatenated_batch(
     translated_batch = translated_batch.split(separator)
 
     for i, info in enumerate(msg_info_batch):
-        translated_text = translated_batch[i]
+        try:
+            translated_text = translated_batch[i]
+        except IndexError:
+            logger.warning(f"{batch_text} -> {translated_batch}")
+            raise
         info.text = translated_text
-
     return msg_info_batch
 
 
