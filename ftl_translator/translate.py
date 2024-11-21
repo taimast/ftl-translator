@@ -45,8 +45,8 @@ class TranslateOpts:
     include_variables: list[str] = field(default_factory=list)
     exclude_variables: list[str] = field(default_factory=list)
 
-    batch_size: int = 3
-    limit_translate: int = 10
+    batch_size: int = 5
+    limit_translate: int = 4
 
     origin_locale_dir: Path = field(init=False)
 
@@ -110,6 +110,25 @@ async def translate_batch(
     return msg_info_batch
 
 
+async def translate_concatenated_batch(
+    msg_info_batch: list[MessageInfo],
+    g_translator: GoogleTranslator,
+    target_locale: Locale,
+) -> list[MessageInfo]:
+    # какой то знак для разделения сообщений. Уникальный
+    separator = "[◙]\n"
+    batch_text = separator.join([info.text for info in msg_info_batch])
+
+    translated_batch = await g_translator.translate(batch_text, target=target_locale)
+    translated_batch = translated_batch.split(separator)
+
+    for i, info in enumerate(msg_info_batch):
+        translated_text = translated_batch[i]
+        info.text = translated_text
+
+    return msg_info_batch
+
+
 async def translate(opts: TranslateOpts):
     ftl_files = parse_ftl_files(opts.origin_locale_dir)
 
@@ -137,7 +156,7 @@ async def translate(opts: TranslateOpts):
 
                 translated_text = ""
                 for batch in batches:
-                    translated_batch = await translate_batch(
+                    translated_batch = await translate_concatenated_batch(
                         batch, g_translator, target_locale
                     )
                     logger.debug(f"Batch size: {len(translated_batch)} translated")
