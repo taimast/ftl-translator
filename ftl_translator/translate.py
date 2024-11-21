@@ -116,7 +116,7 @@ async def translate_concatenated_batch(
     target_locale: Locale,
 ) -> list[MessageInfo]:
     # какой то знак для разделения сообщений. Уникальный
-    separator = "[◙]\n"
+    separator = "\n[◙]\n"
     batch_text = separator.join([info.text for info in msg_info_batch])
 
     translated_batch = await g_translator.translate(batch_text, target=target_locale)
