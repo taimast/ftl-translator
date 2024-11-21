@@ -159,8 +159,8 @@ async def translate(opts: TranslateOpts):
                 messages_info = MessageInfo.get_message_info(resource)
 
                 batches = [
-                    messages_info[i : i + opts.batch_size]
-                    for i in range(0, len(messages_info), opts.batch_size)
+                    messages_info[i : i + opts.translate_batch_size]
+                    for i in range(0, len(messages_info), opts.translate_batch_size)
                 ]
 
                 translated_text = ""
