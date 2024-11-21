@@ -121,6 +121,7 @@ async def translate_concatenated_batch(
 
     translated_batch = await g_translator.translate(batch_text, target=target_locale)
     translated_batch = translated_batch.split(separator)
+    logger.debug(f"{batch_text} -> {translated_batch}")
 
     for i, info in enumerate(msg_info_batch):
         translated_text = translated_batch[i]
