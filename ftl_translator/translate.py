@@ -46,6 +46,7 @@ class TranslateOpts:
     exclude_variables: list[str] = field(default_factory=list)
 
     batch_size: int = 3
+    limit_translate: int = 10
 
     origin_locale_dir: Path = field(init=False)
 
@@ -69,7 +70,9 @@ class TranslateOpts:
             relative_path = file.relative_to(self.origin_locale_dir)
         except ValueError:
             # If the file is not in the origin locale directory, raise an error
-            raise ValueError(f"{file} is not in the subpath of {self.origin_locale_dir}")
+            raise ValueError(
+                f"{file} is not in the subpath of {self.origin_locale_dir}"
+            )
 
         # Construct new path with target locale
         new_file = Path(self.locales_dir, target_locale, relative_path)
@@ -97,7 +100,9 @@ async def translate_batch(
 ) -> list[MessageInfo]:
     batch_text = [info.text for info in msg_info_batch]
 
-    translated_batch = await g_translator.translate_batch(batch_text, target=target_locale)
+    translated_batch = await g_translator.translate_batch(
+        batch_text, target=target_locale
+    )
     for i, info in enumerate(msg_info_batch):
         translated_text = translated_batch[i]
         info.text = translated_text
@@ -110,6 +115,7 @@ async def translate(opts: TranslateOpts):
 
     async with GoogleTranslator(
         source=opts.origin_locale,
+        limit=opts.limit_translate,
     ) as g_translator:
         for target_locale in opts.target_locales:
             logger.info(f"[{opts.origin_locale} -> {target_locale}] Translating...")
@@ -131,7 +137,9 @@ async def translate(opts: TranslateOpts):
 
                 translated_text = ""
                 for batch in batches:
-                    translated_batch = await translate_batch(batch, g_translator, target_locale)
+                    translated_batch = await translate_batch(
+                        batch, g_translator, target_locale
+                    )
                     logger.debug(f"Batch size: {len(translated_batch)} translated")
 
                     for info in translated_batch:
@@ -141,4 +149,6 @@ async def translate(opts: TranslateOpts):
                 async with aiofiles.open(target_file, "w", encoding="utf-8") as f:
                     await f.write(translated_text)
 
-                logger.info(f"[{opts.origin_locale} -> {target_locale}] Translated {file.name}")
+                logger.info(
+                    f"[{opts.origin_locale} -> {target_locale}] Translated {file.name}"
+                )

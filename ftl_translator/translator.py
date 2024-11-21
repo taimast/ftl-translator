@@ -20,6 +20,7 @@ class GoogleTranslator:
         proxy: Optional[str] = None,
         retry_wait_time: int = 5,
         retry_count: int = 3,
+        limit: int = 10,
     ):
         """
         Initialize the translator.
@@ -41,6 +42,7 @@ class GoogleTranslator:
         self.retry_count = retry_count
 
         self.session: Optional[aiohttp.ClientSession] = None
+        self.semaphore = asyncio.Semaphore(limit)
 
     async def __aenter__(self):
         """
@@ -80,50 +82,52 @@ class GoogleTranslator:
         params["q"] = text.strip()
 
         if not self.session:
-            raise RuntimeError("Session is not initialized. Use 'async with' to create a session.")
-
-        async with self.session.get(
-            self.BASE_URL,
-            params=params,
-            proxy=self.proxy,
-        ) as response:
-            if response.status == 429:
-                if retry_count is None:
-                    retry_count = self.retry_count
-                else:
-                    retry_count -= 1
-
-                if retry_count < 0:
-                    raise Exception("Too many requests. Please try again later.")
-
-                if retry_count > 0:
-                    logger.warning(
-                        f"Too many requests. Please try again later. Retry count: {retry_count}. "
-                        f"Retry wait time: {self.retry_wait_time}"
-                    )
-                    await asyncio.sleep(self.retry_wait_time)
-                    return await self.translate(
-                        text,
-                        source,
-                        target,
-                        retry_count=retry_count,
-                    )
-
-            if not response.ok:
-                raise Exception(f"Request error: {response.status}")
-
-            result = await response.json()
-
-            if not result or not isinstance(result, list) or not result[0]:
-                raise Exception("Translation error: translation not found.")
-
-            translated_text = "".join([item[0] for item in result[0] if item[0]])
-
-            logger.debug(
-                f"[{params["sl"]} -> {params["tl"]}] Translated: {text} -> {translated_text}"
+            raise RuntimeError(
+                "Session is not initialized. Use 'async with' to create a session."
             )
+        async with self.semaphore:
+            async with self.session.get(
+                self.BASE_URL,
+                params=params,
+                proxy=self.proxy,
+            ) as response:
+                if response.status == 429:
+                    if retry_count is None:
+                        retry_count = self.retry_count
+                    else:
+                        retry_count -= 1
 
-            return translated_text
+                    if retry_count < 0:
+                        raise Exception("Too many requests. Please try again later.")
+
+                    if retry_count > 0:
+                        logger.warning(
+                            f"Too many requests. Please try again later. Retry count: {retry_count}. "
+                            f"Retry wait time: {self.retry_wait_time}"
+                        )
+                        await asyncio.sleep(self.retry_wait_time)
+                        return await self.translate(
+                            text,
+                            source,
+                            target,
+                            retry_count=retry_count,
+                        )
+
+                if not response.ok:
+                    raise Exception(f"Request error: {response.status}")
+
+                result = await response.json()
+
+                if not result or not isinstance(result, list) or not result[0]:
+                    raise Exception("Translation error: translation not found.")
+
+                translated_text = "".join([item[0] for item in result[0] if item[0]])
+
+                logger.debug(
+                    f"[{params["sl"]} -> {params["tl"]}] Translated: {text} -> {translated_text}"
+                )
+
+                return translated_text
 
     async def translate_file(self, path: str) -> str:
         """
