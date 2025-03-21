@@ -32,8 +32,8 @@ class Locale(StrEnum):
 
 class BaseTranslateOpts(BaseModel):
     locales_dir: Path
-    origin_locale: Locale = Locale.RUSSIAN
-    target_locales: list[Locale] = field(default_factory=lambda: list(Locale))
+    origin_locale: Locale | str = Locale.RUSSIAN
+    target_locales: list[Locale | str] = field(default_factory=lambda: list(Locale))
     include_files: list[str] = field(default_factory=list)
     exclude_files: list[str] = field(default_factory=list)
 
