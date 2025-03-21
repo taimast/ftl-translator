@@ -74,7 +74,7 @@ class AiTranslator:
             prompts.append(
                 [
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": obj},
+                    {"role": "user", "content": obj.data},
                 ]
             )
         return prompts

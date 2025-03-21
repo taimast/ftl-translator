@@ -83,7 +83,11 @@ async def create_batch_job(
         input_file_id=batch_file.id,
         endpoint="/v1/chat/completions",
         completion_window="24h",
-        metadata={"model": model, "purpose": "translate", "task": "header and introduction"},
+        metadata={
+            "model": model,
+            "purpose": "translate",
+            "task": "header and introduction",
+        },
     )
     logger.info(f"Batch job created: {batch_job.id}")
     return batch_job
