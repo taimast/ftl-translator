@@ -33,12 +33,14 @@ class Locale(StrEnum):
 class BaseTranslateOpts(BaseModel):
     locales_dir: Path
     origin_locale: Locale | str = Locale.RUSSIAN
-    target_locales: list[Locale | str] = field(default_factory=lambda: list(Locale))
-    include_files: list[str] = field(default_factory=list)
-    exclude_files: list[str] = field(default_factory=list)
+    target_locales: typing.Sequence[Locale | str] = field(
+        default_factory=lambda: list(Locale)
+    )
+    include_files: typing.Sequence[str] = field(default_factory=list)
+    exclude_files: typing.Sequence[str] = field(default_factory=list)
 
-    include_variables: list[str] = field(default_factory=list)
-    exclude_variables: list[str] = field(default_factory=list)
+    include_variables: typing.Sequence[str] = field(default_factory=list)
+    exclude_variables: typing.Sequence[str] = field(default_factory=list)
 
     _origin_locale_dir: Path = PrivateAttr()
 
