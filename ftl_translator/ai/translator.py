@@ -52,7 +52,7 @@ class AiTranslator:
         self.model: ChatModel = model
         self.client = AsyncOpenAI(
             api_key=api_key,
-            http_client=httpx.AsyncClient(proxies=proxy),
+            http_client=httpx.AsyncClient(proxy=proxy),
         )
 
     async def __aenter__(self):
