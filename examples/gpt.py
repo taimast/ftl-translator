@@ -10,8 +10,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 BASE_DIR = Path(__file__).parent
 LOCALES_DIR = BASE_DIR / "locales"
-TOKEN = "dsfasfasdf"
-BOT = "123412341:sdtasfasdfasdf"
 
 
 async def main():
