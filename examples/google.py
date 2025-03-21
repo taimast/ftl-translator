@@ -1,9 +1,9 @@
 import asyncio
-from logging import Logger
 import logging
 from pathlib import Path
 
-from ftl_translator import Locale, TranslateOpts, translate
+from ftl_translator.google.translate import GoogleTranslateOpts, translate
+from ftl_translator.options import Locale
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -12,10 +12,10 @@ LOCALES_DIR = BASE_DIR / "locales"
 
 
 async def main():
-    opts = TranslateOpts(
+    opts = GoogleTranslateOpts(
         locales_dir=LOCALES_DIR,
-        origin_locale=Locale.ENGLISH,
-        target_locales=[Locale.RUSSIAN, Locale.CHINESE],
+        origin_locale=Locale.RUSSIAN,
+        target_locales=[Locale.ENGLISH, Locale.CHINESE],
     )
     await translate(opts)
 

@@ -1,3 +1,6 @@
 *.lock
 tests
 __pycache__
+locales
+# Ignore .secret-stack folder
+.secret-stack

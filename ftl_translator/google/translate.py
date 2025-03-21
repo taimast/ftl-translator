@@ -1,98 +1,20 @@
-import asyncio
-from dataclasses import dataclass, field
-from enum import StrEnum
-from pathlib import Path
-
-from fluent.syntax import parse
 import logging
 
-from ftl_translator.extractor import MessageInfo
-from ftl_translator.translator import GoogleTranslator
 import aiofiles
+from fluent.syntax import parse
+
+from ..extractor import MessageInfo
+from ..options import BaseTranslateOpts, Locale, parse_ftl_files
+from .translator import GoogleTranslator
 
 logger = logging.getLogger(__name__)
 
 
-class Locale(StrEnum):
-    """Language codes."""
-
-    ENGLISH = "en"
-    RUSSIAN = "ru"
-
-    ARAB = "ar"
-    CHINESE = "zh-CN"
-    SPANISH = "es"
-    FRENCH = "fr"
-    GERMAN = "de"
-    INDIAN = "hi"
-    JAPANESE = "ja"
-    PORTUGUESE = "pt"
-    TURKISH = "tr"
-    UKRAINIAN = "uk"
-
-    PHILIPPINE = "tl"
-    INDONESIAN = "id"
-
-
-@dataclass
-class TranslateOpts:
-    locales_dir: Path
-    origin_locale: Locale = Locale.RUSSIAN
-    target_locales: list[Locale] = field(default_factory=lambda: list(Locale))
-    include_files: list[str] = field(default_factory=list)
-    exclude_files: list[str] = field(default_factory=list)
-
-    include_variables: list[str] = field(default_factory=list)
-    exclude_variables: list[str] = field(default_factory=list)
-
+class GoogleTranslateOpts(BaseTranslateOpts):
     translate_batch_size: int = 5
     translate_limit: int = 4
     translate_retry_wait_time: int = 5
     translate_retry_count: int = 3
-
-    origin_locale_dir: Path = field(init=False)
-
-    def __post_init__(self):
-        self.target_locales = list(
-            set(filter(lambda x: x != self.origin_locale, self.target_locales))
-        )
-        self.origin_locale_dir = Path(self.locales_dir, self.origin_locale)
-
-    # подходит ли под критерии
-    def is_applicable(self, file: Path) -> bool:
-        if self.include_files and file.name not in self.include_files:
-            return False
-        if self.exclude_files and file.name in self.exclude_files:
-            return False
-        return True
-
-    def create_target_file(self, file: Path, target_locale: str) -> Path:
-        try:
-            # Create a relative path from the origin locale directory
-            relative_path = file.relative_to(self.origin_locale_dir)
-        except ValueError:
-            # If the file is not in the origin locale directory, raise an error
-            raise ValueError(
-                f"{file} is not in the subpath of {self.origin_locale_dir}"
-            )
-
-        # Construct new path with target locale
-        new_file = Path(self.locales_dir, target_locale, relative_path)
-
-        # Create parent directories if they don't exist
-        new_file.parent.mkdir(parents=True, exist_ok=True)
-
-        return new_file
-
-
-def parse_ftl_files(locale_dir: Path) -> list[Path]:
-    ftl_files = []
-    for file in locale_dir.iterdir():
-        if file.is_file() and file.suffix == ".ftl":
-            ftl_files.append(file)
-        else:
-            ftl_files.extend(parse_ftl_files(file))
-    return ftl_files
 
 
 async def translate_batch(
@@ -136,7 +58,7 @@ async def translate_concatenated_batch(
     return msg_info_batch
 
 
-async def translate(opts: TranslateOpts):
+async def translate(opts: GoogleTranslateOpts):
     ftl_files = parse_ftl_files(opts.origin_locale_dir)
 
     async with GoogleTranslator(
